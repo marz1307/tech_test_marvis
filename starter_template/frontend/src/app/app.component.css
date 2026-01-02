@@ -1,12 +1,337 @@
-:host {
-  --content-padding: 10px;
-}
-header {
+/* ==========================================================================
+   Customer Insights Dashboard (app.component.css)
+   Theme inspired by Force24 page:
+   - Soft lavender/grey background
+   - Deep navy accent for headings/buttons
+   - Clean card layout with subtle shadow
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Design tokens (CSS variables) for colors, spacing, typography
+   -------------------------------------------------------------------------- */
+:host{
+  /* Spacing */
+  --page-max: 1120px;
+  --gap: 16px;
+
+  /* Force24-like palette */
+  --bg: #f5f2ff;           /* soft lavender background */
+  --panel: #ffffff;        /* card/panel background */
+  --ink: #17132a;          /* deep ink/navy */
+  --muted: rgba(23,19,42,.70);
+  --border: rgba(23,19,42,.12);
+  --shadow: rgba(23,19,42,.10);
+  --accent: #1b1530;       /* deep navy accent */
+  --accent-2: #7a5cff;     /* subtle purple highlight */
+
+  /* Typography */
+  --radius: 14px;
+  --radius-lg: 18px;
+  --font: "Be Vietnam Pro", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  /* Ensure component has sensible defaults */
   display: block;
-  height: 60px;
-  padding: var(--content-padding);
-  box-shadow: 0px 5px 25px var(--shadow-color);
+  font-family: var(--font);
+  color: var(--ink);
 }
-.content {
-  padding: var(--content-padding);
+
+/* --------------------------------------------------------------------------
+   Page layout
+   -------------------------------------------------------------------------- */
+.page{
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 28px 18px 48px;
+}
+
+/* Content width + centre alignment */
+.container{
+  max-width: var(--page-max);
+  margin: 0 auto;
+}
+
+/* Main page title */
+.page-title{
+  font-size: 44px;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 10px 0 22px;
+  text-align: center;
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   Section wrappers
+   -------------------------------------------------------------------------- */
+.section{
+  margin: 18px 0 22px;
+}
+
+.section-header{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.section-title{
+  font-size: 20px;
+  margin: 0;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+}
+
+/* Reusable “panel” for blocks like ingestion/records/chart/table */
+.panel{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 28px var(--shadow);
+  padding: 16px;
+}
+
+/* Small helper text */
+.muted{
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------------------------
+   SUMMARY: metrics grid + cards (6 cards L → R, wraps on smaller screens)
+   -------------------------------------------------------------------------- */
+.summary-grid{
+  display: grid;
+  grid-template-columns: repeat(6, minmax(140px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* Make it responsive: wrap to fewer columns on small screens */
+@media (max-width: 1100px){
+  .summary-grid{ grid-template-columns: repeat(3, minmax(160px, 1fr)); }
+}
+@media (max-width: 640px){
+  .summary-grid{ grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+}
+
+/* Individual metric card */
+.metric-card{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 14px 12px;
+  box-shadow: 0 8px 18px rgba(23, 19, 42, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Accent strip at top of each card */
+.metric-card::before{
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--accent-2);
+  opacity: .85;
+}
+
+/* Label and value styling inside a card */
+.metric-label{
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.metric-value{
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Loading text for summary */
+.loading{
+  font-size: 14px;
+  color: var(--muted);
+  padding: 10px 0;
+}
+
+/* --------------------------------------------------------------------------
+   Ingestion report block
+   -------------------------------------------------------------------------- */
+.ingestion-lines{
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+
+/* --------------------------------------------------------------------------
+   Filters (Search + Status)
+   -------------------------------------------------------------------------- */
+.filters{
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 12px;
+  align-items: end;
+  margin: 10px 0 14px;
+}
+
+@media (max-width: 760px){
+  .filters{ grid-template-columns: 1fr; }
+}
+
+.filter-field label{
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* Inputs/selects */
+.input,
+.select{
+  width: 100%;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.input:focus,
+.select:focus{
+  border-color: rgba(122, 92, 255, .55);
+  box-shadow: 0 0 0 3px rgba(122, 92, 255, .18);
+}
+
+/* --------------------------------------------------------------------------
+   Top 5 bar “chart”
+   -------------------------------------------------------------------------- */
+.top5{
+  margin: 6px 0 14px;
+}
+
+.top5-title{
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+.bar-row{
+  display: grid;
+  grid-template-columns: 180px 1fr 70px;
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+@media (max-width: 760px){
+  .bar-row{ grid-template-columns: 1fr; }
+}
+
+.bar-label{
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-track{
+  background: rgba(23, 19, 42, .06);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(23, 19, 42, .06);
+}
+
+.bar-fill{
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  border-radius: 999px;
+}
+
+.bar-value{
+  text-align: right;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   Data table
+   -------------------------------------------------------------------------- */
+.table-wrap{
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+table{
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+  background: #fff;
+}
+
+thead th{
+  text-align: left;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(245, 242, 255, .75);
+}
+
+tbody td{
+  padding: 12px;
+  border-bottom: 1px solid rgba(23,19,42,.06);
+  font-size: 14px;
+}
+
+tbody tr:hover{
+  background: rgba(122, 92, 255, .06);
+}
+
+/* Small status pill */
+.pill{
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  background: rgba(23, 19, 42, .04);
+  color: var(--ink);
+}
+
+.pill.active{
+  background: rgba(122, 92, 255, .12);
+  border-color: rgba(122, 92, 255, .25);
+}
+
+.pill.inactive{
+  background: rgba(23, 19, 42, .06);
+}
+
+/* --------------------------------------------------------------------------
+   Utility helpers
+   -------------------------------------------------------------------------- */
+.spacer-8{ height: 8px; }
+.spacer-12{ height: 12px; }
+.spacer-16{ height: 16px; }
+
+/* If you want everything inside a centered "card page" feel */
+.page-surface{
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 18px 18px 22px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(23,19,42,.08);
+  box-shadow: 0 18px 44px rgba(23,19,42,.08);
 }
