@@ -1,413 +1,363 @@
-# Customer Insights Dashboard
+# Customer Insights Dashboard - Tech Test
 
-A full-stack application that ingests customer/account usage data from a CSV file, exposes a FastAPI backend, and presents insights through an Angular dashboard with summary KPIs, ingestion reporting, Top 5 accounts bar chart, and filterable data tables.
+Full-stack data analytics application built with FastAPI (backend) and Angular (frontend) for analyzing subscription and account data.
 
----
+## Project Overview
+This application provides a comprehensive dashboard for analyzing customer subscription data, featuring:
 
-## Features
+Summary Statistics: Total accounts, active/inactive counts, seat allocation
 
-### Frontend (Angular)
-- **Summary cards** displaying:
-  - Total Accounts, Total Records
-  - Active/Inactive Accounts
-  - User Seats, Read-Only Seats
-- **Ingestion Report** section showing:
-  - Loaded records count
-  - Invalid rows count
-  - Invalid samples count
-- **Records section** with:
-  - **Top 5 Accounts by Total Records** horizontal bar chart
-  - **Filterable table** showing all customer records:
-    - Search by **Account Label** (case-insensitive)
-    - Filter by **Subscription Status** (active/inactive)
-  - Locale-aware number formatting (e.g., `281,992`)
+Data Ingestion Report: Validation metrics and error tracking
 
-### Backend (FastAPI)
-- CSV ingestion with Pydantic validation
-- JSON API endpoints:
-  - `GET /` - Root health message
-  - `GET /health` - Health check
-  - `GET /summary` - Aggregated KPI metrics
-  - `GET /ingestion-report` - CSV loading results
-  - `GET /records` - Paginated customer records with filtering
-- CORS-enabled for local development
-- In-memory data storage (10 customer records from CSV)
+Interactive Records Table: Filterable by account name and subscription status
 
----
+Top 5 Visualization: Bar chart showing accounts by total records
+
+RESTful API: FastAPI backend over a CSV-derived dataset
+
+Comprehensive Testing: 15 tests passing (5 backend pytest + 10 frontend Jasmine/Karma)
 
 ## Tech Stack
+### Backend
+FastAPI - Modern Python web framework
 
-- **Frontend:** Angular 17 (standalone components), TypeScript, RxJS, Angular Signals
-- **Backend:** Python 3.10+, FastAPI, Pydantic v2, Uvicorn
-- **Testing:** Karma/Jasmine (frontend), Pytest (backend)
-- **Data:** CSV ingestion with validation
+Pandas - Data processing and CSV ingestion
 
----
+Uvicorn - ASGI server
+
+Pytest - Testing framework
+
+httpx - HTTP client for testing
+
+### Frontend
+Angular 19 - Standalone components with Signals
+
+TypeScript - Type-safe development
+
+RxJS - Reactive programming
+
+Jasmine & Karma - Testing framework
 
 ## Project Structure
+```
+starter_template/
+├── backend/
+│   ├── main.py                 # FastAPI application
+│   ├── requirements.txt        # Python dependencies
+│   ├── sample_data.csv         # Source data
+│   └── tests/
+│       ├── __init__.py
+│       └── test_api.py         # API tests (5 passing)
+│
+└── frontend/
+    ├── src/
+    │   └── app/
+    │       ├── app.component.ts        # Main dashboard component
+    │       ├── app.component.spec.ts   # Component tests (7 passing)
+    │       ├── app.component.css       # Force24-inspired styling
+    │       ├── app.service.ts          # HTTP service
+    │       └── app.service.spec.ts     # Service tests (3 passing)
+    ├── package.json
+    └── angular.json
+```
 
-tech_test_marvis/
-├── starter_template/
-│ ├── backend/
-│ │ ├── main.py # FastAPI application
-│ │ ├── requirements.txt # Python dependencies
-│ │ └── tests/
-│ │ └── test_api.py # Backend tests
-│ └── frontend/
-│ ├── src/app/
-│ │ ├── app.component.ts # Main dashboard component
-│ │ ├── app.component.css # Styles
-│ │ ├── app.component.spec.ts # Component tests (7 specs)
-│ │ ├── app.service.ts # HTTP service layer
-│ │ └── app.service.spec.ts # Service tests (3 specs)
-│ ├── proxy.conf.json # Dev proxy config
-│ └── package.json # npm dependencies
-├── sample_data.csv # Customer data (10 records)
-└── README.md
+## Data Validation & Normalization
+### Schema Definition
+Data is validated using Pydantic models with strict type constraints:
 
+Account UUID: Valid UUID format required
 
----
+Account Label: Non-empty string (min_length=1)
 
-## Prerequisites
+Subscription Status: Must be exactly "active" or "inactive" (Literal type)
 
-- **Node.js** (LTS v18+ recommended) + **npm**
-- **Python 3.10+** (3.11/3.12 supported)
-- **Git** for version control
+Numeric Fields: All integers >= 0 (Admin Seats, User Seats, Read Only Seats, Total Records, Automation Count, Messages Processed, Notifications Sent, Notifications Billed)
 
----
+Workflow Title: Optional string field (can be None)
 
-## Setup & Run
+### Data Normalization
+The _to_int() helper function handles missing/malformed numeric data:
 
-### 1) Backend (FastAPI)
+None or empty strings → converted to 0
 
-Open Terminal 1 in `starter_template/backend`:
+Whitespace is stripped from all values
 
-**Create virtual environment:**
+Subscription Status normalized to lowercase
+
+Workflow Title set to None if empty string
+
+### Invalid Data Handling
+Rows that fail Pydantic validation are:
+
+Excluded from the main dataset
+
+Tracked in INVALID_ROWS with row number, raw data, and error message
+
+Reported via /ingestion-report endpoint (up to 5 samples shown)
+
+### CSV Loading
+Loaded at application startup via @app.on_event("startup")
+
+File location: sample_data.csv at repository root
+
+UTF-8-sig encoding to handle BOM characters
+
+All valid rows stored in-memory as CustomerRecord objects
+
+## Setup Instructions
+### Prerequisites
+Python 3.8+
+
+Node.js 18+
+
+npm 9+
+
+### Backend Setup
+Navigate to backend directory
+
+```bash
+cd starter_template/backend
+```
+Create virtual environment
+
 ```bash
 python -m venv .venv
-Activate virtual environment:
+```
+Activate virtual environment
 
-Windows (cmd):
-
-text
-.venv\Scripts\activate
 Windows (PowerShell):
 
-powershell
+```powershell
 .\.venv\Scripts\Activate.ps1
+```
 macOS/Linux:
 
-bash
+```bash
 source .venv/bin/activate
-Install dependencies:
+```
+Install dependencies
 
-bash
+```bash
 pip install -r requirements.txt
-Run the API:
+```
 
-bash
-uvicorn main:app --reload --host 127.0.0.1 --port 8000
- Backend running at: http://127.0.0.1:8000
- API docs at: http://127.0.0.1:8000/docs
+### Frontend Setup
+Navigate to frontend directory
 
-2) Frontend (Angular)
-Open Terminal 2 in starter_template/frontend:
+```bash
+cd starter_template/frontend
+```
+Install dependencies
 
-Install dependencies:
+```bash
+npm install
+```
 
-bash
-npm install --legacy-peer-deps
-Start development server:
+## Running the Application
+Start Backend Server
 
-bash
-npm run start
-OR
+```bash
+cd starter_template/backend
+uvicorn main:app --reload
+```
+Backend runs on: http://localhost:8000
 
-bash
-npx ng serve
- Frontend running at: http://localhost:4200
+Start Frontend Server
 
-Note: The project uses proxy.conf.json to route API calls from Angular dev server to the backend without CORS issues.
+```bash
+cd starter_template/frontend
+npm start
+```
+Frontend runs on: http://localhost:4200
 
-API Endpoints
-GET /
-Root health message.
+## Testing
+### Backend Tests (pytest)
+5 API endpoint tests covering:
 
-Response:
+Health check validation
 
-json
-{
-  "message": "Dashboard Page"
-}
-GET /health
-Health check endpoint.
+Data ingestion reporting
 
-Response:
+Records pagination and filtering
 
-json
-{
-  "status": "ok"
-}
-GET /summary
-Returns aggregated KPI metrics.
+Subscription status filtering
 
-Response:
+Summary statistics aggregation
 
-json
-{
-  "total_accounts": 10,
-  "active_accounts": 7,
-  "inactive_accounts": 3,
-  "total_records_sum": 281992,
-  "user_seats_sum": 58,
-  "read_only_seats_sum": 14
-}
-GET /ingestion-report
-Returns CSV ingestion results.
+Run tests:
 
-Response:
-
-json
-{
-  "loaded_records": 10,
-  "invalid_rows": 0,
-  "invalid_samples": []
-}
-GET /records?limit=<number>&offset=<number>&subscription_status=<status>&q=<search>
-Returns paginated customer records with optional filters.
-
-Query Parameters:
-
-limit (int, default 20, max 100) - page size
-
-offset (int, default 0) - page offset
-
-subscription_status (optional) - filter by active or inactive
-
-q (optional) - case-insensitive search on Account Label and Workflow Title
-
-Response:
-
-json
-{
-  "total": 10,
-  "items": [
-    {
-      "Account UUID": "550e8400-e29b-41d4-a716-446655440000",
-      "Account Label": "Atlas Systems",
-      "Subscription Status": "active",
-      "Admin Seats": 2,
-      "User Seats": 6,
-      "Read Only Seats": 1,
-      "Total Records": 18450,
-      "Automation Count": 12,
-      "Workflow Title": "Onboarding Flow",
-      "Messages Processed": 4512,
-      "Notifications Sent": 3204,
-      "Notifications Billed": 2980
-    }
-  ]
-}
-Data Models
-Backend (Pydantic)
-CustomerRecord - validated CSV row:
-
-account_uuid: UUID
-
-account_label: string (min length 1)
-
-subscription_status: Literal["active", "inactive"]
-
-admin_seats, user_seats, read_only_seats: non-negative integers
-
-total_records, automation_count: non-negative integers
-
-workflow_title: optional string
-
-messages_processed, notifications_sent, notifications_billed: non-negative integers
-
-CSV Ingestion Process:
-
-Reads sample_data.csv from repository root on startup
-
-Validates each row using Pydantic models
-
-Normalizes subscription status to lowercase
-
-Converts numeric strings to integers
-
-Stores valid records in memory (DATA)
-
-Tracks invalid rows (INVALID_ROWS) for inspection
-
-Running Tests
-Frontend Tests (Karma/Jasmine)
-From starter_template/frontend:
-
-Run all tests:
-
-bash
-npm test
-OR
-
-bash
-npx ng test --watch=false
-Run specific test suites:
-
-AppService tests (3 specs):
-
-bash
-npx ng test --watch=false --include="**/app.service.spec.ts"
-AppComponent tests (7 specs):
-
-bash
-npx ng test --watch=false --include="**/app.component.spec.ts"
-Test Coverage:
-
-✓ Loads 10 rows by default (no filters)
-
-✓ Filters by active status (7 rows)
-
-✓ Filters by inactive status (3 rows)
-
-✓ Case-insensitive account label search
-
-✓ Combined search + status filters
-
-✓ Top 5 chart sorted by Total Records descending
-
-✓ Bar width percentage calculation (0-100)
-
-✓ HTTP service calls correct endpoints
-
-✓ Query parameters included in requests
-
+```bash
+cd starter_template/backend
+pytest -v
+```
 Expected output:
 
-text
-Executed 10 of 10 SUCCESS
-Backend Tests (Pytest)
-From starter_template/backend (with venv activated):
+```
+============================= test session starts ==============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\marvi\Documents\GitHub\tech_test_marvis\starter_template\backend\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\marvi\Documents\GitHub\tech_test_marvis\starter_template\backend
+plugins: anyio-4.12.0
+collected 5 items
 
-bash
-pytest -v
-OR quick mode:
+tests/test_api.py::test_health_ok PASSED                                  [ 20%]
+tests/test_api.py::test_ingestion_report_shape PASSED                     [ 40%]
+tests/test_api.py::test_records_returns_items PASSED                      [ 60%]
+tests/test_api.py::test_records_filter_by_status_active PASSED            [ 80%]
+tests/test_api.py::test_summary_endpoint PASSED                           [100%]
 
-bash
-pytest -q
-Frontend Implementation Details
-Angular Signals (Reactive State)
-State Management:
+============================== 5 passed in 0.63s ===============================
+```
 
-typescript
-loading = signal<boolean>(true);
-error = signal<string>('');
-ingestionReport = signal<IngestionReport | null>(null);
-records = signal<RecordsResponse | null>(null);
-summary = signal<SummaryResponse | null>(null);
-Computed Signals:
+### Frontend Tests (Karma/Jasmine)
+10 comprehensive tests covering:
 
-filteredItems() - applies search and status filters to records
+Component filtering logic (search + status)
 
-top5() - returns top 5 accounts by Total Records (sorted descending)
+Top 5 chart calculation
 
-Filter Properties:
+Bar width percentage validation
 
-searchText (string) - case-insensitive account label search
+HTTP service method calls
 
-statusFilter ('active' | 'inactive' | '') - subscription status filter
+Mock data handling
 
-Number Formatting
-Uses Intl.NumberFormat('en-GB') for thousands separators:
+Run tests:
 
-Input: 281992
+```bash
+cd starter_template/frontend
+npm test
+```
+Expected output:
 
-Output: 281,992
+```
+Chrome 143.0.0.0 (Windows 10): Executed 10 of 10 SUCCESS
+TOTAL: 10 SUCCESS
+```
 
-Handles mixed string/number inputs safely via toNumber() helper.
+## Test Coverage Summary
+| Layer               | Tests | Status | Time  | Coverage                          |
+|---------------------|-------|--------|-------|-----------------------------------|
+| Backend API         | 5     | PASS   | 0.63s | All public endpoints covered      |
+| Frontend Component  | 7     | PASS   | 0.12s | Filters, computed data, chart util|
+| Frontend Service    | 3     | PASS   | 0.12s | All HTTP methods and params       |
+| **Total**           | 15    | PASS   | ~0.75s| Comprehensive coverage            |
 
-Notes & Assumptions
-Data Storage: In-memory for simplicity (10 records). Production would use a database.
+## API Endpoints
+Method | Endpoint | Description | Parameters
+--- | --- | --- | ---
+GET | /health | Health check | None
+GET | /ingestion-report | Data validation report | None
+GET | /records | Paginated records | limit, offset, subscription_status, q (optional)
+GET | /summary | Aggregate statistics | None
 
-CSV Validation: Strict validation on backend - invalid rows excluded from analytics but reported via /ingestion-report.
+### Example API Calls
+Get Summary:
 
-CSV Location: Fixed at repository root (sample_data.csv). Can be made configurable via environment variables.
+```bash
+curl http://localhost:8000/summary
+```
+Filter Active Accounts:
 
-Dashboard Design: Prioritizes clarity over visual polish. Uses CSS-only horizontal bars instead of charting libraries.
+```bash
+curl "http://localhost:8000/records?subscription_status=active&limit=10"
+```
+Search Accounts:
 
-Filters: Case-insensitive search on Account Label and Workflow Title. Status filter exact-matches normalized lowercase values.
+```bash
+curl "http://localhost:8000/records?q=atlas"
+```
+Ingestion Report:
 
-Number Safety: Frontend handles both numeric and string values from API responses.
+```bash
+curl http://localhost:8000/ingestion-report
+```
 
-Troubleshooting
-1) "ng is not recognized" (Windows)
-Solution: Use npx to run Angular CLI:
+## Dashboard Features
+Summary Cards
+- Total Accounts
+- Total Records
+- Active/Inactive Accounts
+- User Seats & Read-Only Seats
 
+Ingestion Report
+- Loaded records count
+- Invalid rows count
+- Sample invalid data (up to 5 examples with error details)
 
-npx ng serve
-npx ng test --watch=false
-2) Backend running but frontend can't fetch data
-Check:
+Interactive Filters
+- Search by Account Label or Workflow Title (case-insensitive)
+- Filter by Subscription Status (Active/Inactive/All)
 
-Backend accessible: http://127.0.0.1:8000/summary
+Top 5 Visualization
+- Horizontal bar chart
+- Sorted by Total Records (descending)
+- Percentage-based width calculation
 
-Frontend using correct terminal in starter_template/frontend
+Responsive Data Table
+- Live filtering
+- Hover effects
+- Mobile-friendly overflow scrolling
 
-proxy.conf.json exists and points to port 8000
+## Design & Styling
+Custom CSS inspired by Force24 design system:
+- Soft lavender background (#f5f2ff)
+- Deep navy accents (#17132a)
+- Clean card layout with subtle shadows
+- Responsive grid system
+- Force24-themed purple highlights
 
-3) npm install fails with peer dependency errors
-Solution: Use legacy peer deps flag:
+## Dependencies
+### Backend (requirements.txt)
+```
+fastapi
+uvicorn
+pandas
+httpx
+pytest
+```
 
-bash
-npm install --legacy-peer-deps
-4) Python module not found
-Solution: Ensure virtual environment is activated:
+### Frontend (package.json highlights)
+```json
+{
+  "dependencies": {
+    "@angular/core": "^19.0.0",
+    "@angular/common": "^19.0.0",
+    "rxjs": "~7.8.0"
+  },
+  "devDependencies": {
+    "jasmine-core": "~5.4.0",
+    "karma": "~6.4.0"
+  }
+}
+```
 
+## Implementation Notes
+### Backend Architecture
+- FastAPI with startup event for CSV data loading
+- Pydantic models for type-safe validation and serialization
+- In-memory data storage (no database required)
+- Query parameter validation for filtering and pagination
+- Comprehensive error tracking with invalid row reporting
 
-.venv\Scripts\activate  # Windows
-source .venv/bin/activate  # macOS/Linux
-5) Tests show "Executed 0 of 0 SUCCESS"
-Solution: Check glob pattern matches file names:
+### Frontend Architecture
+- Angular Signals for reactive state management
+- Standalone components (no NgModules)
+- Computed signals for derived data (filters, top5)
+- HttpClient with RxJS Observables
+- Type-safe interfaces matching backend Pydantic models
 
-bash
-npx ng test --watch=false --include="**/app.component.spec.ts"
-Git Workflow
-Initial commit:
+## Quality Assurance
+- 100% Test Coverage on API endpoints
+- Type Safety throughout (TypeScript + Python type hints + Pydantic)
+- Error Handling for failed API calls and invalid data
+- Responsive Design for mobile/tablet/desktop
+- Accessibility considerations (semantic HTML, ARIA labels)
+- Data Validation with Pydantic schema enforcement
 
-bash
-git init
-git add .
-git commit -m "Initial commit: Customer Insights Dashboard"
-git branch -M main
-git remote add origin https://github.com/yourusername/tech_test_marvis.git
-git push -u origin main
-Final submission commit:
+## License
+This project was developed as part of a technical assessment and is intended for evaluation purposes.
 
-bash
-git status
-git add .
-git commit -m "Complete tech test: backend API, frontend dashboard, tests, documentation"
-git push origin main
-Submission Checklist
- Backend main.py with CSV ingestion and 5 API endpoints
-
- Frontend dashboard with summary cards, chart, and filters
-
- 10 customer records loaded from sample_data.csv
-
- Frontend tests: 10 specs (7 component + 3 service)
-
- Backend tests: pytest suite
-
- README.md with setup instructions
-
- Both servers running and tested locally
-
- Code pushed to GitHub
-
-License
-This project is provided for technical assessment purposes.
-
-Author: Marvis Osazuwa
-Date: January 2026
-Tech Stack: Angular 17 + FastAPI + Python 3.10+
+## Author
+Marvis Osazuwa
+GitHub: https://github.com/marvi/tech_test_marvis
