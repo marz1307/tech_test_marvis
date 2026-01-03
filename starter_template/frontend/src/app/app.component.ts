@@ -115,7 +115,8 @@ export interface RecordsResponse {
           <label>
             Search (Account Label):
             <input
-              [(ngModel)]="searchText"
+              [ngModel]="searchText()"
+              (ngModelChange)="searchText.set($event)"
               placeholder="e.g. Atlas"
               style="margin-left:6px; padding:4px 6px; width:220px;"
             />
@@ -123,7 +124,9 @@ export interface RecordsResponse {
 
           <label>
             Status:
-            <select [(ngModel)]="statusFilter" style="margin-left:6px; padding:4px 6px;">
+            <select [ngModel]="statusFilter()" 
+            (ngModelChange)="statusFilter.set($event)" style="margin-left:6px; padding:4px 6px;"
+            >
               <option value="">All</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
@@ -213,7 +216,7 @@ export class AppComponent implements OnInit {
   // ---------------------------------------------------------------------------
 
   /** Free-text search for “Account Label” (case-insensitive) */
-  searchText = '';
+  searchText = signal<string>('');
 
   /**
    * Status filter:
@@ -221,7 +224,7 @@ export class AppComponent implements OnInit {
    * - 'active'  => only active
    * - 'inactive'=> only inactive
    */
-  statusFilter: '' | 'active' | 'inactive' = '';
+  statusFilter = signal<'' | 'active' | 'inactive'>('');
 
   // ---------------------------------------------------------------------------
   // Number formatting (presentation layer)
@@ -275,8 +278,8 @@ export class AppComponent implements OnInit {
   filteredItems = computed<RecordRow[]>(() => {
     const items = this.records()?.items ?? [];
 
-    const q = (this.searchText || '').trim().toLowerCase();
-    const status = (this.statusFilter || '').trim().toLowerCase();
+    const q = (this.searchText() || '').trim().toLowerCase();
+    const status = (this.statusFilter() || '').trim().toLowerCase();
 
     return items.filter((r) => {
       const accountLabel = String(r['Account Label'] ?? '').toLowerCase();
